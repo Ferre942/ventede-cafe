@@ -1,0 +1,88 @@
+<!DOCTYPE html>
+<html lang="fr">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>Abonnement Café Fraicheur</title>
+  <script src="https://js.paystack.co/v1/inline.js"></script>
+
+  <!-- Lien vers le fichier CSS externe -->
+  <link rel="stylesheet" href="style.css">
+</head>
+<body>
+
+  <div class="container">
+    <h1>Choisissez votre Plan d'Abonnement</h1>
+    <p>Nous avons conçu des plans pour satisfaire vos besoins. Choisissez celui qui vous convient et commencez votre voyage avec Café Fraicheur.</p>
+    
+    <!-- Sélection des plans -->
+    <div class="plans">
+      <div class="plan">
+        <h3>Plan Basique</h3>
+        <p>Accès à l'option de base pour les amateurs de café.</p>
+        <div class="plan-price">1500 FCFA / Mois</div>
+        <button data-plan="basic" data-amount="1500">S'abonner</button>
+      </div>
+
+      <div class="plan">
+        <h3>Plan Premium</h3>
+        <p>Un plan plus complet pour les passionnés de café.</p>
+        <div class="plan-price">4000 FCFA / Mois</div>
+        <button data-plan="premium" data-amount="4000">S'abonner</button>
+      </div>
+
+      <div class="plan">
+        <h3>Plan VIP</h3>
+        <p>Accès complet avec des options exclusives.</p>
+        <div class="plan-price">12000 FCFA / Mois</div>
+        <button data-plan="vip" data-amount="12000">S'abonner</button>
+      </div>
+    </div>
+
+    <!-- Message après paiement -->
+    <div class="message" id="successMessage">
+      <p>Félicitations ! Votre paiement a été effectué avec succès. Vous allez bientôt profiter de nos services.</p>
+    </div>
+
+  </div>
+
+  <script>
+    const buttons = document.querySelectorAll('button');
+    buttons.forEach(button => {
+      button.addEventListener('click', function() {
+        const plan = this.getAttribute('data-plan');
+        const amount = this.getAttribute('data-amount');
+
+        // Envoyer la requête au backend pour créer une transaction Paystack
+        fetch('/create-payment', {
+          method: 'POST',
+          headers: {
+            'Content-Type': 'application/json',
+          },
+          body: JSON.stringify({ plan: plan, amount: amount }),
+        })
+        .then(response => response.json())
+        .then(data => {
+          // Configurer le formulaire Paystack
+          const paymentForm = PaystackPop.setup({
+            key: 'your-public-key-here',  // Ta clé publique Paystack
+            email: 'user@example.com',    // Email de l'utilisateur
+            amount: data.amount * 100,    // Montant en kobo
+            currency: 'XOF',
+            ref: data.transaction_ref,    // Référence de transaction
+            callback: function(response) {
+              document.getElementById('successMessage').style.display = 'block';
+            },
+            onClose: function() {
+              alert('La fenêtre de paiement a été fermée');
+            }
+          });
+
+          paymentForm.openIframe(); // Ouvrir le formulaire Paystack
+        });
+      });
+    });
+  </script>
+
+</body>
+</html>

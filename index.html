@@ -1,0 +1,113 @@
+<!DOCTYPE html>
+<html lang="fr">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>Abonnement Café Fraicheur</title>
+  <script src="https://js.paystack.co/v1/inline.js"></script>
+  <style>
+    /* Style basique pour le formulaire */
+    body {
+      font-family: Arial, sans-serif;
+      background-color: #f5f5f5;
+      padding: 20px;
+    }
+    .container {
+      max-width: 600px;
+      margin: auto;
+      background-color: #fff;
+      padding: 20px;
+      border-radius: 8px;
+      box-shadow: 0 4px 8px rgba(0, 0, 0, 0.1);
+    }
+    h1 {
+      text-align: center;
+      margin-bottom: 20px;
+    }
+    .plan-selection {
+      margin-bottom: 20px;
+    }
+    label {
+      display: block;
+      font-size: 16px;
+      margin-bottom: 10px;
+    }
+    button {
+      width: 100%;
+      padding: 10px;
+      background-color: #f39c12;
+      color: white;
+      border: none;
+      font-size: 16px;
+      cursor: pointer;
+    }
+    button:hover {
+      background-color: #e67e22;
+    }
+  </style>
+</head>
+<body>
+  <div class="container">
+    <h1>Choisissez votre Plan d'Abonnement</h1>
+    <form id="paymentForm">
+      <div class="plan-selection">
+        <label>
+          <input type="radio" name="plan" value="basic" required>
+          Plan Basique - 1500 FCFA/mois
+        </label>
+        <label>
+          <input type="radio" name="plan" value="premium">
+          Plan Premium - 4000 FCFA/mois
+        </label>
+        <label>
+          <input type="radio" name="plan" value="vip">
+          Plan VIP - 12000 FCFA/mois
+        </label>
+      </div>
+      <button type="submit">Payer maintenant</button>
+    </form>
+  </div>
+
+  <script>
+    const form = document.getElementById('paymentForm');
+    form.addEventListener('submit', function(e) {
+      e.preventDefault();
+      
+      const plan = document.querySelector('input[name="plan"]:checked').value;
+      let amount;
+
+      if (plan === 'basic') amount = 1500;
+      else if (plan === 'premium') amount = 4000;
+      else if (plan === 'vip') amount = 12000;
+
+      // Envoyer une requête au serveur pour créer une transaction Paystack
+      fetch('/create-payment', {
+        method: 'POST',
+        headers: {
+          'Content-Type': 'application/json',
+        },
+        body: JSON.stringify({ plan: plan, amount: amount }),
+      })
+      .then(response => response.json())
+      .then(data => {
+        // Si le paiement est créé, redirige l'utilisateur vers le lien de paiement Paystack
+        const paymentForm = PaystackPop.setup({
+          key: 'pk_test_b78457f8ab5f4d9ec6fdd6fce615b4451b7c3b25',  // Ta clé publique Paystack
+          email: 'user@example.com',    // L'email de l'utilisateur
+          amount: data.amount * 100,    // Montant en kobo
+          currency: 'XOF',
+          ref: data.transaction_ref,    // Référence de transaction
+          callback: function(response) {
+            alert("Paiement réussi avec le numéro de transaction : " + response.reference);
+          },
+          onClose: function() {
+            alert('La fenêtre de paiement a été fermée');
+          }
+        });
+
+        paymentForm.openIframe(); // Ouvrir le formulaire Paystack
+      });
+    });
+  </script>
+</body>
+</html>
